@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       					   http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
+
+
+    <bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+        <property name="driverClassName" value="com.mysql.jdbc.Driver"/>
+        <property name="url" value="jdbc:mysql:///test"/>
+        <property name="username" value="root"/>
+        <property name="password" value="root"/>
+    </bean>
+
+    <bean id="iAccountDao" class="cn.itcst.spring.IAccountDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean id="iAccountService" class="cn.itcst.spring.IAccountServiceImpl">
+        <property name="iAccountDao" ref="iAccountDao"/>
+    </bean>
+
+            <!--xml:
+                   步骤：1. 装配事务管理器
+                        2.配置事务策略，设置事务的隔离级别，是否只读等等
+                        3.配置AOP，使用事务去对哪些方法进行管理
+            -->
+
+    <!--1. 装配事务管理器-->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <!--2. 配置事务策略
+    配置通知，通知中要处理的就是事务
+    -->
+    <tx:advice id="txAdvice" >
+        <tx:attributes>
+            <tx:method name="*"/>
+        </tx:attributes>
+    </tx:advice>
+
+    <!--配置aop，使用哪些事务去对哪些方法进行管理
+    第三步：配置切入点，让通知关联切入点，即事务控制业务层的方法
+    -->
+    <aop:config>
+        <!--对哪些方法进行切入-->
+        <aop:pointcut id="pt1" expression="execution(* cn.itcst.spring.*.*(..))"/>
+        <!--通知在哪里进行增强-->
+        <aop:advisor advice-ref="txAdvice" pointcut-ref="pt1"/>
+    </aop:config>
+
+</beans>
+
